@@ -1,0 +1,35 @@
+Zijin Li's Project3 Description
+
+Student Info--------------------------
+> first name: Zijin
+> last name: Li
+> questID: z542li
+> e-mail: z542li@uwaterloo.ca
+--------------------------------------
+
+Overall-------------------------------
+> bucket brigade (young gen: B0, B1; old gen: Old)
+> copy in young gen from B0 to B1 tospace
+> promote from B1 fromspace to Old
+> mark everything and sweep for freelist in old gen, coalescence when sweeping
+> use a 'young collect', 'old collect', 'retry young collect' method
+> the 'young collect' and the 're-try young collect' use the same function: ggggc_collect()
+> if ggggc_collectFull() is called independently, it will call ggggc_collect() at the end as the 'retry young collect'; otherwise if ggggc_collectFull() is called by the 'young collect', the 'retry young collect' does not switch pools
+> in the 'retry young collect', B1 tospace uses the marked bit left by the 'old collect' as /unscanned/, B0 and B1 fromspace always use forwarded bit as /scanned/
+> allocate new pools directly and retry allocation if allocation space is not enough during the 'retry young collect', therefore avoid calling ggggc_collectFull() again
+--------------------------------------
+
+Remember Set--------------------------
+> each struct GGGGC_PoolOld have a bit map for every word as the remember set
+> identical to descriptor's pointer bit map, the remember set is in a partially-reversed order
+> setting remember set is to set the address's corresponding bit to '1'
+> when initializing young gen's worklist, if read a wrongly remembered location, unset the corresponding bit to '0' to make the remember set more precise
+> remember set is cleared at the beginning of ggggc_collectFull() and rebuilt in the mark phase
+> use 'maxRememberSetIndex' and 'minRememberSetIndex' to narrow the search, updated when setting remember set or rebulding remember set
+--------------------------------------
+
+NewPool-------------------------------
+> Old: (H of old) is set to (L of old)*2 after collecting old gen
+> B1: (H of B1) is set to (L of B1)*3 after collecting young gen
+> B0: (H of B0) is set to (H of B1)*B0_B1_RATIO after collecting young gen; B0_B1_RATIO is currently set to 1
+--------------------------------------
